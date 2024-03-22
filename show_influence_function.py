@@ -1,5 +1,6 @@
 # used to draw the influence function of the proposed estimator QN_OPT_MSE (= Q^2_{opt-mse}) 
 
+import sys
 import numpy
 from commons_Qn import CorrectionType
 from commons_Qn import correctionType_to_label
@@ -47,6 +48,23 @@ def plot(ax, all_outlier_values, mseEstimate, correctionType):
 
 NR_RUNS = 100000 
 NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = 500000 
+
+if len(sys.argv) == 1:
+    smallRun = False
+else:
+    assert(len(sys.argv) == 2)
+    assert(sys.argv[1] == "smallRun")
+    smallRun = True
+
+
+if smallRun:
+    # USE THIS FOR DEBUG ONLY:
+    NR_RUNS = 100
+    NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = 50000
+else:
+    NR_RUNS = 100000
+    NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = 500000
+
 
 
 

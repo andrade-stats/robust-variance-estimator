@@ -41,7 +41,7 @@ else:
 
 if smallRun:
     # USE THIS FOR DEBUG ONLY:
-    NR_RUNS = 1000
+    NR_RUNS = 100
     NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = 50000
 else:
     NR_RUNS = 100000
