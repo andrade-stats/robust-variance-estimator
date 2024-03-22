@@ -53,6 +53,6 @@ All results are saved into folder "all_results/."
 
 Plots the influence function using the data from the above simulation
 ```bash
-python show_influence_function.py
+python show_influence_function.py smallRun
 ```
 
