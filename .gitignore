@@ -1,0 +1,8 @@
+__pycache__/
+all_results/
+related_work/
+data/
+latex/
+not_needed/
+readme_private.txt
+.DS_Store
