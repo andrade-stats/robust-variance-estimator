@@ -35,17 +35,17 @@ mkdir all_results
 -------------------------------------------
 1. Run Influence Function Simulation
 -------------------------------------------
-1.1 Run influence function simulation with n = 10 and small number of samples (smallRun)
+Run influence function simulation with n = 10 and small number of samples (smallRun)
 ```bash
 python influenceFunction_estimate_Qn.py 10 smallRun
 ```
 
-1.2 Run influence function simulation with n = 100 and small number of samples (smallRun)
+Run influence function simulation with n = 100 and small number of samples (smallRun)
 ```bash
 python influenceFunction_estimate_Qn.py 100 smallRun
 ```
 
-Results are saved iinto folder "all_results/."
+All results are saved into folder "all_results/."
 
 -------------------------------------------
 2. Show Influence Function
