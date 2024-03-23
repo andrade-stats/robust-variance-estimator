@@ -61,8 +61,6 @@ if SIGMA_SQUARE_ESTIMATION_WITH_GIVEN_MEAN:
     from commons import CORRECTION_TYPES_FOR_TABLES
     from commons import correctionType_to_label
 
-    
-
     ALL_M = commons.getAll_m(n)
     
     for m in ALL_M:
