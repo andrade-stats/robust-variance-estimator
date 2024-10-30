@@ -85,10 +85,7 @@ def getStatisticsForOptEstimator(allSamples_collected, sigmaEstimate = None):
     allSamples_normalized = allSamples_collected / allExpectations
     
     if sigmaEstimate is None:
-        sigmaEstimate = sklearn.covariance.LedoitWolf(store_precision=False).fit(allSamples_normalized).covariance_ # running on mini2 (for n = 200, 300)
-        # sigmaEstimate = numpy.cov(allSamples_normalized, rowvar = False, bias = False)
-        # sigmaEstimate = sklearn.covariance.LedoitWolf(store_precision=False).fit(allSamples_normalized).covariance_ # running on mini2 (for n = 200, 300)
-        # sigmaEstimate = sklearn.covariance.OAS(store_precision=False).fit(allSamples_normalized).covariance_ # running on mini1 (for n = 200, 300)
+        sigmaEstimate = sklearn.covariance.LedoitWolf(store_precision=False).fit(allSamples_normalized).covariance_ 
         assert(False)
 
     print("*** so far so good *** ")
@@ -109,94 +106,6 @@ def getPairwiseSquaredDistanceSorted(allSamples):
     all_squared_distances_sorted = numpy.sort(all_squared_distances)
     return all_squared_distances_sorted
 
-
-# def estimateFiniteCorrectionFactors_Qn(nrAllObservations_n, nrSamplesForEstimation, useMemoryEfficient):
-#     assert(nrAllObservations_n <= 500) # otherwise might be too slow
-#     assert(nrSamplesForEstimation >= 100000)
-    
-#     m = getQn_m(nrAllObservations_n)
-
-#     print("nrSamplesForEstimation = ", nrSamplesForEstimation)
-#     print("m = ", m)
-    
-    
-#     if not useMemoryEfficient:
-#         assert(False)
-#         allSamples_collected = numpy.zeros((nrSamplesForEstimation, m))
-#         for i in range(nrSamplesForEstimation):
-#             if i % 100 == 0:
-#                 print("i = ", i)
-#             allSamples = scipy.stats.norm.rvs(loc=0.0, scale=1.0, size = nrAllObservations_n)
-            
-#             all_squared_distances_sorted = getPairwiseSquaredDistanceSorted(allSamples)
-            
-#             # print("all_squared_distances_sorted = ", all_squared_distances_sorted.shape[0])
-#             # print("scipy.misc.comb(N,k) = ", scipy.special.comb(n,2))
-            
-#             allSamples_collected[i] = all_squared_distances_sorted[0:m]
-#             del allSamples
-#             del all_squared_distances_sorted
-
-#         print("** SO FAR SUCCESSFUL **")
-#         gc.collect()
-#         _, allExpectations, best_a, nu = getStatisticsForOptEstimator(allSamples_collected)
-        
-#     else:
-#         # Implements the Rao-Blackwell-Ledoit-Wolf Estimator from "Shrinkage Algorithms for MMSE Covariance Estimation", 2009
-        
-#         print("USE HOME-MADE COV MATRIX ESTIMATION")
-#         BATCH_SIZE = 1000
-        
-#         assert((nrSamplesForEstimation % BATCH_SIZE) == 0)
-
-#         start_time = time.time()
-
-#         allExpectations = numpy.zeros(m)
-
-#         S_hat = numpy.zeros((m,m))
-#         allSamples_collected = numpy.zeros((BATCH_SIZE, m))
-        
-#         for batchId in range(nrSamplesForEstimation // BATCH_SIZE):
-#             print(f"FINISHED BATCH {batchId}/{nrSamplesForEstimation // BATCH_SIZE}")
-#             for i in range(BATCH_SIZE):
-#                 #if i % 100 == 0:
-#                 #    print(f"i = {i}/{nrSamplesForEstimation}")
-#                 allSamples = scipy.stats.norm.rvs(loc=0.0, scale=1.0, size = nrAllObservations_n)
-#                 all_squared_distances_sorted = getPairwiseSquaredDistanceSorted(allSamples)
-#                 inlierSamples = all_squared_distances_sorted[0:m]
-                
-#                 allExpectations += inlierSamples
-                
-#                 allSamples_collected[i] = inlierSamples
-        
-#             S_hat += numpy.cov(allSamples_collected, rowvar = False, bias = True)
-        
-#         S_hat = S_hat / (nrSamplesForEstimation // BATCH_SIZE)
-#         print("GATHERED ALL SAMPLES")
-#         print(f"FINISHED COV MATRIX ESTIMATION in {(time.time() - start_time) / 60.0} minutes")
-        
-#         n = nrSamplesForEstimation
-        
-#         allExpectations = allExpectations / n
-#         S_hat = numpy.diag(1.0 / allExpectations) @ S_hat @ numpy.diag(1.0 / allExpectations)
-#         S_hat_squared = S_hat @ S_hat
-#         F_hat = (numpy.trace(S_hat) / m) * numpy.eye(m)
-
-#         S_hat_tr_squared = numpy.trace(S_hat) ** 2
-#         S_hat_squared_tr = numpy.trace(S_hat_squared)
-#         p_RBLW_nominator = ((n - 2) / n) * S_hat_squared_tr + S_hat_tr_squared
-#         p_RBLW_denominator = (n + 2) * (S_hat_squared_tr - S_hat_tr_squared / m)
-#         p_RBLW = numpy.min([1, p_RBLW_nominator / p_RBLW_denominator])
-#         sigmaEstimate = (1 - p_RBLW) * S_hat +  p_RBLW *  F_hat
-        
-#         print("p_RBLW = ", p_RBLW)
-#         print(f"FINISHED COV MATRIX ESTIMATION in {(time.time() - start_time) / 60.0} minutes")
-#         start_time = time.time()
-#         best_a = optimalLinearCombination(sigmaEstimate)
-#         nu = best_a.transpose() @ sigmaEstimate @ best_a
-#         print(f"FINISHED INVERSION in {(time.time() - start_time) / 60.0} minutes")
-        
-#     return allExpectations, best_a, nu
 
 
 # **** Implements the Rao-Blackwell-Ledoit-Wolf Estimator from "Shrinkage Algorithms for MMSE Covariance Estimation", 2009 ***
@@ -269,24 +178,10 @@ def RBLF_estimator(nrAllObservations_n, nrSamplesForEstimation, Qn_estimate = Tr
     return allExpectations, best_a, nu
 
 
-# def memEfficientCovMatrix(allSamples_collected):
-#     m = allSamples_collected.shape[1]
-#     sigmaEstimate = numpy.zeros((m,m))
-#     for i in range(allSamples_collected.shape[0]):
-#         if i % 100 == 0:
-#             print("sigmaEstimate i = ", i)
-#         sigmaEstimate += numpy.outer(allSamples_collected[i], allSamples_collected[i])
-    
-#     return sigmaEstimate
     
 
 def optimalLinearCombination(Sigma):
     m = Sigma.shape[0]
-
-    # if useExact:
-    #     invSigma = numpy.linalg.inv(Sigma)
-    #     best_a = (invSigma @ numpy.ones(m)) / (  numpy.ones(m).transpose() @ invSigma @ numpy.ones(m) )
-    # else:
 
     L, lower = scipy.linalg.cho_factor(Sigma, overwrite_a=True, check_finite=False)
     inSigma_times_ones = scipy.linalg.cho_solve((L, lower), numpy.ones(m))
@@ -295,18 +190,13 @@ def optimalLinearCombination(Sigma):
     return best_a
 
 def getFiniteCorrectedSigmaSquared(inlierAbsDiff, correctionFac_mean, correctionFac_largestInlier):
-    # print("correctionFac_mean = ", correctionFac_mean)
-    # assert(correctionFac_mean < 1.0)
-
+    
     uncorrectedSigmaSquared_estimatedWithMean = numpy.mean(numpy.square(inlierAbsDiff))
     uncorrectedSigmaSquared_estimatedWithMax = numpy.max(inlierAbsDiff) ** 2
     
     sigmaSquared_estimatedWithMean = uncorrectedSigmaSquared_estimatedWithMean / correctionFac_mean
     sigmaSquared_estimatedWithMax = uncorrectedSigmaSquared_estimatedWithMax / correctionFac_largestInlier
     
-    # uncorrectedSigmaSquared_estimatedWithSmallestVarId = (numpy.sort(inlierAbsDiff)[smallestVarId]) ** 2
-    # sigmaSquared_estimatedWithSmallestVarId = uncorrectedSigmaSquared_estimatedWithSmallestVarId / correctionFac_smallestVarId
-
     return sigmaSquared_estimatedWithMean, sigmaSquared_estimatedWithMax
 
 
@@ -317,10 +207,6 @@ def getFiniteCorrectedSigmaSquared_bestLinearCombMethod(inlierAbsDiff, allRankEx
     
     sortedSquaredInliers_normalized = sortedSquaredInliers / allRankExpectations
     
-    # print("sortedSquaredInliers = ", sortedSquaredInliers)
-    # print("sortedSquaredInliers_normalized = ", sortedSquaredInliers_normalized)
-    # print("best_a = ", best_a)
-
     sigmaSquared_estimatedWithComb = sortedSquaredInliers_normalized @ best_a
     return sigmaSquared_estimatedWithComb
 

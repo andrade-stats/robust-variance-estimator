@@ -11,3 +11,4 @@ correctionType_to_label[CorrectionType.QN_FINITE] = r'$Q_n^2$ (finite)'
 correctionType_to_label[CorrectionType.QN_ASYMPTOTIC] = r'$Q_n^2$ (asymptotic)'
 correctionType_to_label[CorrectionType.QN_OPT_LIN] = r'$Q_{\text{\normalfont opt-lin}}^2$'
 correctionType_to_label[CorrectionType.QN_OPT_MSE] = r'$Q_{\text{\normalfont opt-mse}}^2$'
+correctionType_to_label["getPairwiseSquaredDistanceSorted"] = "getPairwiseSquaredDistanceSorted"

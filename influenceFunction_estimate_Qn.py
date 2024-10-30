@@ -5,6 +5,7 @@ import numpy
 import scipy.special
 import time
 import sigmaCorrectionMethods
+from commons import get_sample_size
 from commons_Qn import CorrectionType
 import sys
 
@@ -39,14 +40,7 @@ else:
     else:
         smallRun = False
 
-if smallRun:
-    # USE THIS FOR DEBUG ONLY:
-    NR_RUNS = 100
-    NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = 50000
-else:
-    NR_RUNS = 100000
-    NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = 500000
-
+NR_RUNS, NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = get_sample_size(smallRun)
 
 USE_MEMORY_EFFICIENT = True
 
@@ -63,21 +57,21 @@ MAX_OUTLIER_VALUE = numpy.sqrt(trueVar) * 5
 print("n = ", n)
 print("NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE = ", NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE)
 
+all_runtimes = {}
 
 start_time = time.time()
 
 allRankExpectations, best_a, nu = sigmaCorrectionMethods.RBLF_estimator(n, nrSamplesForEstimation = NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE, Qn_estimate = True)
-# allRankExpectations, best_a, nu = sigmaCorrectionMethods.estimateFiniteCorrectionFactors_Qn(n, nrSamplesForEstimation = NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE, useMemoryEfficient = USE_MEMORY_EFFICIENT)
+
+all_runtimes["RBLF_estimator"] = time.time() - start_time
 
 print("-- FINISHED PREPARATION --")
 
-variance_allMethods = {}
 estimate_allMethods = {}
-mse_allMethods = {}
 for correctionType in CorrectionType:
     estimate_allMethods[correctionType] = numpy.zeros((NR_RUNS, NR_OUTLIER_STEPS))
-    variance_allMethods[correctionType] = numpy.zeros((NR_RUNS, NR_OUTLIER_STEPS))
-    mse_allMethods[correctionType] = numpy.zeros((NR_RUNS, NR_OUTLIER_STEPS))
+    all_runtimes[correctionType] = numpy.zeros((NR_RUNS, NR_OUTLIER_STEPS))
+    all_runtimes["getPairwiseSquaredDistanceSorted"] = numpy.zeros((NR_RUNS, NR_OUTLIER_STEPS))
 
 print("*******************")
 print("START RUNS")
@@ -98,21 +92,37 @@ for i in range(NR_RUNS):
 
         with localconverter(np_cv_rules) as cv:
             
+            start_time = time.time()
             estimate_allMethods[CorrectionType.MAD][i, j] = rpy2.robjects.r.mad(allSamples) ** 2
-            estimate_allMethods[CorrectionType.QN_ASYMPTOTIC][i, j] = robustbase.Qn(allSamples, finite_corr = False) ** 2
-            estimate_allMethods[CorrectionType.QN_FINITE][i, j] = robustbase.Qn(allSamples, finite_corr = True) ** 2
+            all_runtimes[CorrectionType.MAD][i, j] = time.time() - start_time
 
+            start_time = time.time()
+            estimate_allMethods[CorrectionType.QN_ASYMPTOTIC][i, j] = robustbase.Qn(allSamples, finite_corr = False) ** 2
+            all_runtimes[CorrectionType.QN_ASYMPTOTIC][i, j] = time.time() - start_time
+
+            start_time = time.time()
+            estimate_allMethods[CorrectionType.QN_FINITE][i, j] = robustbase.Qn(allSamples, finite_corr = True) ** 2
+            all_runtimes[CorrectionType.QN_FINITE][i, j] = time.time() - start_time
+
+        start_time = time.time()
         all_squared_distances_sorted = sigmaCorrectionMethods.getPairwiseSquaredDistanceSorted(allSamples)
         all_inlier_distances = numpy.sqrt(all_squared_distances_sorted[0:m])
+        all_runtimes["getPairwiseSquaredDistanceSorted"][i, j] = time.time() - start_time
 
+        start_time = time.time()
         sigmaSquared_lowestVar_unbiased_estimator = sigmaCorrectionMethods.getFiniteCorrectedSigmaSquared_bestLinearCombMethod(all_inlier_distances, allRankExpectations, best_a)
         estimate_allMethods[CorrectionType.QN_OPT_LIN][i, j] = sigmaSquared_lowestVar_unbiased_estimator
+        all_runtimes[CorrectionType.QN_OPT_LIN][i, j] = time.time() - start_time
 
+        start_time = time.time()
+        sigmaSquared_lowestVar_unbiased_estimator = sigmaCorrectionMethods.getFiniteCorrectedSigmaSquared_bestLinearCombMethod(all_inlier_distances, allRankExpectations, best_a)
         shrinkageFac = 1.0 / (1.0 + nu)
         estimate_allMethods[CorrectionType.QN_OPT_MSE][i, j] = shrinkageFac * sigmaSquared_lowestVar_unbiased_estimator
-
-
+        all_runtimes[CorrectionType.QN_OPT_MSE][i, j] = time.time() - start_time
+        
 all_results_mse = {}
+all_results_bias = {}
+all_results_var = {}
 
 print("*************************")
 for correctionType in CorrectionType:
@@ -121,6 +131,20 @@ for correctionType in CorrectionType:
     mseEstimate = numpy.mean(numpy.square(estimate_allMethods[correctionType] - trueVar), axis = 0)
     all_results_mse[correctionType] = mseEstimate
 
+    meanEstimate = numpy.mean(estimate_allMethods[correctionType], axis = 0)
+    biasEstimate = meanEstimate - trueVar
+    varEstimate = numpy.mean(numpy.square(estimate_allMethods[correctionType] - meanEstimate), axis = 0)
+    
+    all_results_bias[correctionType] = biasEstimate
+    all_results_var[correctionType] = varEstimate
+    numpy.testing.assert_allclose(mseEstimate, varEstimate + numpy.square(biasEstimate)) 
+
+print("all_runtimes = ", all_runtimes)
+
 filename_stem = "all_results/" + f"influenceFunction_{NR_RUNS}_{NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE}_{n}"
 numpy.save(filename_stem + "_mse", all_results_mse)
+numpy.save(filename_stem + "_bias", all_results_bias)
+numpy.save(filename_stem + "_var", all_results_var)
 numpy.save(filename_stem + "_steps", all_outlier_values)
+
+numpy.save(filename_stem + "_runtimes", all_runtimes)

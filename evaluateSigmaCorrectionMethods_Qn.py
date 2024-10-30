@@ -4,7 +4,6 @@
 # python evaluateSigmaCorrectionMethods_Qn.py 10
 # saves results in folder "all_results"
 
-from statistics import variance
 import scipy.stats
 import numpy
 import scipy.special
@@ -66,7 +65,6 @@ for mceRunId in range(MONTE_CARLO_ERROR_ESTIMATION_RUNS):
     start_time = time.time()
 
     allRankExpectations, best_a, nu = sigmaCorrectionMethods.RBLF_estimator(n, nrSamplesForEstimation = NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE, Qn_estimate = True)
-    # allRankExpectations, best_a, nu = sigmaCorrectionMethods.estimateFiniteCorrectionFactors_Qn(n, nrSamplesForEstimation = NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE, useMemoryEfficient = USE_MEMORY_EFFICIENT)
     
     print("-- FINISHED PREPARATION --")
 

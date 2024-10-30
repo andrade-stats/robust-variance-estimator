@@ -14,6 +14,18 @@ correctionType_to_label[CorrectionType.FINITE_CORRECTION_EST_WITH_MEAN] = r'$\ha
 correctionType_to_label[CorrectionType.FINITE_CORRECTION_EST_WITH_COMB] = r'$\hat{\sigma}^2_{\text{\normalfont opt-lin}}$'
 correctionType_to_label[CorrectionType.FINITE_CORRECTION_EST_WITH_COMB_BIASED] = r'$\hat{\sigma}^2_{\text{\normalfont opt-mse}}$'
 
+def get_sample_size(smallRun):
+    if smallRun:
+        # USE THIS FOR DEBUG ONLY:
+        nr_runs = 1000
+        nr_mc_samples_for_sigma_estimate = 500000
+    else:
+        nr_runs = 100000
+        nr_mc_samples_for_sigma_estimate = 500000
+
+    return nr_runs, nr_mc_samples_for_sigma_estimate
+
+
 def getAll_m(n):
     if n == 10:
         all_m = numpy.asarray([2, 5, 7, 9]) 
@@ -23,3 +35,19 @@ def getAll_m(n):
         all_m = all_m.astype(int)
     
     return all_m
+
+def getNiceLatexExp(eNotationStr, highlight = False):
+    firstPart = eNotationStr.split("e")[0]
+    secondPart = int(eNotationStr.split("e")[1])
+
+    if highlight:
+        firstPart = r"\textbf{" + firstPart + "}"
+
+    if secondPart == 0:
+        return firstPart
+    else:
+        if highlight:
+            secondPart = r" $\boldsymbol{\times 10^{" + str(secondPart) + "}}$"
+        else:
+            secondPart = r" $\times 10^{" + str(secondPart) + "}$"
+        return firstPart + secondPart

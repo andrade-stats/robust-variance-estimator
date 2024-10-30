@@ -1,7 +1,7 @@
 
 # Improved Variance Estimation from Trimmed Samples
 
-Implementation of all estimators and script for running all experiments described in [Improved Variance Estimation from Trimmed Samples], 2024 (under review).
+Implementation of all estimators and scripts for running all experiments described in [Improved Variance Estimation from Trimmed Samples](https://onlinelibrary.wiley.com/doi/10.1002/sta4.70018), Stat, 2024.
 
 ## Requirements
 

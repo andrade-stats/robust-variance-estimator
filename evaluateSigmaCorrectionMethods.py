@@ -85,7 +85,6 @@ for m in ALL_M:
         correctionFac_largestInlier = allRankExpectations[m-1]
         correctionFac_mean = numpy.mean(allRankExpectations)
 
-        # correctionFac_mean, correctionFac_largestInlier, smallestVarId, correctionFac_smallestVarId, allRankExpectations, best_a, nu = sigmaCorrectionMethods.estimateFiniteCorrectionFactors(m, n, nrSamplesForEstimation = NR_MC_SAMPLES_FOR_SIGMA_ESTIMATE)
         all_best_a[mceRunId] = best_a
 
         variance_allMethods = {}
@@ -108,14 +107,12 @@ for m in ALL_M:
             estimate_allMethods[CorrectionType.NO_CORRECTION][i] = numpy.sum(numpy.square(inlierAbsDiff)) / m
             
             asymptoticCorrectedSigmaSquare = sigmaCorrectionMethods.getAsymptoticCorrectedSigma(inlierAbsDiff, n) ** 2
-            # print("correctedSigmaSquare (asymptotic) = ", asymptoticCorrectedSigmaSquare)
             estimate_allMethods[CorrectionType.ASYMPTOTIC_CORRECTION][i] = asymptoticCorrectedSigmaSquare
             
             finiteCorrectedSigmaSquare_estimatedWithMean, finiteCorrectedSigmaSquare_estimatedWithMax = sigmaCorrectionMethods.getFiniteCorrectedSigmaSquared(inlierAbsDiff, correctionFac_mean, correctionFac_largestInlier)
             estimate_allMethods[CorrectionType.FINITE_CORRECTION_EST_WITH_MEAN][i] = finiteCorrectedSigmaSquare_estimatedWithMean
             estimate_allMethods[CorrectionType.FINITE_CORRECTION_EST_WITH_MAX][i] = finiteCorrectedSigmaSquare_estimatedWithMax
-            # estimate_allMethods[CorrectionType.FINITE_CORRECTION_EST_WITH_SMALLEST_VAR_ID][i] = finiteCorrectedSigmaSquare_estimatedWithSmallestVarId
-
+            
             assert(inlierAbsDiff.shape[0] == m)
             assert(inlierAbsDiff.shape[0] == best_a.shape[0])
             sigmaSquared_lowestVar_unbiased_estimator = sigmaCorrectionMethods.getFiniteCorrectedSigmaSquared_bestLinearCombMethod(inlierAbsDiff, allRankExpectations, best_a)
